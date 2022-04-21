@@ -1,0 +1,28 @@
+{
+  "name": "pdf-js-vue",
+  "version": "0.1.0",
+  "description": "",
+  "main": "src/pdf-js-vue.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "npx http-server ./",
+    "build": "webpack --config ./webpack.config.js"
+  },
+  "keywords": [
+    "PDF",
+    "Vue"
+  ],
+  "author": "Luke Nickerson",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.0",
+    "vue": "^3.2.33",
+    "webpack": "^5.72.0",
+    "webpack-cli": "^4.9.2",
+    "pdfjs-dist": "^2.13.216"
+  },
+  "dependencies": {
+    
+  }
+}

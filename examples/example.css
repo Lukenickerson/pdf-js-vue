@@ -1,0 +1,36 @@
+body {
+	background: #c2ada3;
+	font-family: 'Segoe UI', Tahoma, sans-serif;
+	font-size: calc(14px + .7vmin);
+	display: flex;
+	justify-content: center;
+}
+
+#app {
+	width: 80vw;
+	max-width: 50em;
+}
+
+.app-body {
+	padding: 2vmin 0;
+}
+
+.app-body button {
+	padding: 1em 2em;
+	margin: 1em;
+	font-size: inherit;
+}
+
+.code-block {
+	display: block;
+	background: rgba(10, 10, 10, 0.9);
+	color: white;
+	padding: 1em;
+	font-size: 80%;
+}
+.code-block code {
+	white-space: pre;
+}
+.code-block .code-comment {
+	color: #446644;
+}

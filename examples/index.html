@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>PDF-JS-VUE</title>
+	<link rel="stylesheet" href="../styles/pdf-js-vue-viewer.css" />
+	<link rel="stylesheet" href="./example.css" />
+	<!-- <script type="module" src="example.mjs" id="example-script"></script> -->
+<script id="example-script" type="module">
+	// Importing pdf-js-vue.global.js puts pdfJsVue on the global scope
+	// This build file is in commonjs format, but can be imported with ESM/module syntax
+	// It includes vue components, templates, and the PDF.js library from pdfjs-dist
+	import '../build/pdf-js-vue.global.js';
+	// This example assumes you're bringing your own Vue
+	import { createApp } from '../node_modules/vue/dist/vue.esm-browser.js';
+
+	// Prepare the requirements that are needed for the PDF viewer vue app
+	const vue = { createApp }; // Only createApp is needed
+	// Need to specify where to put the app in the DOM (an empty <div> is good)
+	const mountId = 'example-pdf-js-vue-container';
+	// Need to specify where the PDF worker javascript file is
+	// (Could also use '../node_modules/pdfjs-dist/build/pdf.worker.js')
+	const pdfJsWorkerSrc = '../build/pdf.worker.global.js';
+
+	// Open a PDF by adding the "Viewer" vue app with addViewerApp
+	function openPdf(pdfDocumentUrl) {
+		pdfJsVue.addViewerApp({ vue, mountId, pdfJsWorkerSrc, pdfDocumentUrl });
+	}
+	// Allow opening of PDFs by clicking any element with a data-pdfsrc value
+	window.document.addEventListener('click', (e) => {
+		if (e.target.dataset.pdfsrc) openPdf(e.target.dataset.pdfsrc);
+	});
+</script>
+</head>
+<body>
+	<main id="app">
+		<h1>PDF-JS-VUE</h1>
+		<div class="app-body">
+			<p>
+				This example shows how the "PJV" viewer can be added to - and opened from -
+				a traditional, non-vue webpage by adding a vue app.
+			</p>
+			<div id="example-code-block" class="code-block"></div>
+			<button type="button"
+				data-pdfsrc="Frankenstein_by_Mary_Shelley_Project_Gutenberg.pdf">
+				Open PDF: Frankenstein
+			</button>
+			<button type="button"
+				data-pdfsrc="mozilla_pdf.js_github_2022-04-19.pdf">
+				Open PDF: PDF.js GitHub Page
+			</button>
+		</div>
+	</main>
+	<div id="example-pdf-js-vue-container"></div>
+	<script type="module">
+		import { writeCode } from './code.mjs';
+		writeCode('example-script', 'example-code-block');
+	</script>
+</body>
+</html>
