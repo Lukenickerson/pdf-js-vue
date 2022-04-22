@@ -30,15 +30,18 @@ You'll need npm and git installed.
 1. `npm i git+https://github.com/Lukenickerson/pdf-js-vue.git`
 2. Copy these files to the appropriate places:
 	- `pdf-js-vue-viewer.css` (includes base styles prefixed with `pjv-`)
-	- `pdf.worker.global.js` (PDF.js's worker)
-	- If you're not using a build process, then you'll also need to copy `pdf-js-vue.global.js`
-	- You may want to copy them via an automated process (like webpack's CopyPlugin)
+	- `pdf.worker.js` (PDF.js's worker)
+	- If you're not using a build process then you'll also need to copy `pdf-js-vue.[X].js`, where "[X]" is the type of file you want, e.g. `cjs` (commonjs) or `esm` (ES Module).
+	- You may want to copy them via an automated process (like Rollup's copy plugin or webpack's CopyPlugin)
+3. Make sure you have Vue (`.js`) accessible, either in a scripts folder, or via a CDN.
 
 ### Vanilla Webpage
 
-- In your HTML, add an element to contain the PDF viewer, e.g., `<div id="pdf-viewer-container"></div>`
-- Include the CSS `<link rel="stylesheet" href="./path-to-your-styles/pdf-js-vue-viewer.css" />`
-- *coming soon*
+- In your HTML, add an element to contain the PDF viewer, e.g., `<div id="pdf-viewer-container"></div>`. It's best if this is near the end of your HTML, which gives it a higher z-index by default.
+- Include the CSS `<link rel="stylesheet" href="./path-to-your-styles/pdf-js-vue-viewer.css" />`. Feel free to override any of the styles.
+- Include Vue - e.g., `<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.33/vue.global.min.js"></script>`
+- Include pdfJsVue - *coming soon*
+- Set up an event that triggers the opening of the PDF viewer - *coming soon*
 
 ### Vue App
 
