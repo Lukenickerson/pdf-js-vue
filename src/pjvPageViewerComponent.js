@@ -1,8 +1,7 @@
-// const pdfJsLib = require('../node_modules/pdfjs-dist/build/pdf.js');
-const pdfJsLib = require('pdfjs-dist/build/pdf.js');
-const pjvPageComponent = require('./pjvPageComponent.js');
+import pdfJsLib from './pdf.js';
+import pjvPageComponent from './pjvPageComponent.js';
 
-module.exports = {
+export default {
 	props: {
 		pdfJsWorkerSrc: String,
 		pdfDocumentUrl: String,

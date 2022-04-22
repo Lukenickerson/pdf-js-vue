@@ -1,7 +1,7 @@
 // const pdfJsLib = require('pdfjs-dist/build/pdf.js');
 const CANVAS_ID = 'pdf-js-vue-canvas';
 
-module.exports = {
+export default {
 	props: {
 		pageNumber: Number,
 		scale: Number,

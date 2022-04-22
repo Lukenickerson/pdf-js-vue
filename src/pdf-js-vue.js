@@ -1,4 +1,4 @@
-const pdfOverlayViewerComponent = require('./pjvOverlayViewerComponent.js');
+import pdfOverlayViewerComponent from './pjvOverlayViewerComponent.js';
 
 function addViewerApp(options = {}) {
 	const { vue, mountId, pdfJsWorkerSrc, pdfDocumentUrl } = options;
@@ -26,4 +26,4 @@ function addViewerApp(options = {}) {
 
 const pdfJsVue = { addViewerApp };
 
-module.exports = { pdfJsVue, addViewerApp };
+export { pdfJsVue, addViewerApp };

@@ -1,6 +1,6 @@
-const pdfPageViewerComponent = require('./pjvPageViewerComponent.js');
+import pdfPageViewerComponent from './pjvPageViewerComponent.js';
 
-module.exports = {
+export default {
 	props: {
 		pdfJsWorkerSrc: String,
 		pdfDocumentUrl: String,
