@@ -1,6 +1,7 @@
 import copy from 'rollup-plugin-copy';
 
 const input = 'src/pdf-js-vue.js';
+const external = ['@bundled-es-modules/pdfjs-dist'];
 const plugins = [
 	copy({
 		targets: [
@@ -15,22 +16,21 @@ const plugins = [
 		],
 	}),
 ];
+const cjsConfig = {
+	input,
+	output: {
+		file: 'build/pdf-js-vue.cjs.js',
+		format: 'cjs',
+	},
+	external,
+	plugins,
+};
+const esmConfig = {
+	...cjsConfig,
+	output: {
+		file: 'build/pdf-js-vue.esm.js',
+		format: 'es',
+	},
+}
 
-export default [
-	{
-		input,
-		output: {
-			file: 'build/pdf-js-vue.cjs.js',
-			format: 'cjs',
-		},
-		plugins,
-	},
-	{
-		input,
-		output: {
-			file: 'build/pdf-js-vue.esm.js',
-			format: 'es',
-		},
-		plugins,
-	},
-];
+export default [cjsConfig, esmConfig];
