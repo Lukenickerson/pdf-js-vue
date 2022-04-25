@@ -1,7 +1,7 @@
 import copy from 'rollup-plugin-copy';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
 
 const input = 'src/pdf-js-vue.js';
-const external = ['@bundled-es-modules/pdfjs-dist'];
 const plugins = [
 	copy({
 		targets: [
@@ -15,6 +15,7 @@ const plugins = [
 			},
 		],
 	}),
+	nodeResolve(),
 ];
 const cjsConfig = {
 	input,
@@ -22,7 +23,6 @@ const cjsConfig = {
 		file: 'build/pdf-js-vue.cjs.js',
 		format: 'cjs',
 	},
-	external,
 	plugins,
 };
 const esmConfig = {

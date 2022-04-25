@@ -14,6 +14,7 @@ export default {
 			canvas: null,
 			canvasContext: null,
 			outputScale: window.devicePixelRatio || 1,
+			errorMessage: null,
 		};
 	},
 	methods: {
@@ -21,13 +22,19 @@ export default {
 			return [CANVAS_ID, n].join('_');
 		},
 		async loadPage() {
+			this.errorMessage = null;
 			this.loading = true;
-			// const loadingTask = pdfJsLib.getDocument('mozilla_pdf.js_github_2022-04-19.pdf');
-			// const pdf = await loadingTask.promise;
-			const page = await this.pdf.getPage(this.pageNumber);
-			// Freeze the page to avoid Vue making this a Proxy object (PDF.js doesn't like that)
-			// this.page = Object.freeze(page);
-			await this.renderPage(page);
+			try {
+				// const loadingTask = pdfJsLib.getDocument('mozilla_pdf.js_github_2022-04-19.pdf');
+				// const pdf = await loadingTask.promise;
+				const page = await this.pdf.getPage(this.pageNumber);
+				// Freeze the page to avoid Vue making this a Proxy object (PDF.js doesn't like that)
+				// this.page = Object.freeze(page);
+				await this.renderPage(page);
+			} catch (err) {
+				console.error(err);
+				this.errorMessage = String(err);
+			}
 			this.loading = false;
 		},
 		setupCanvas() {
@@ -71,6 +78,7 @@ export default {
 	},
 	template: (
 		`<div class="pjv-page" :class="pageClass">
+			<div class="pjv-error" v-if="errorMessage">Error: {{errorMessage}}</div>
 			<canvas :id="id" class="pjv-page-canvas"></canvas>
 		</div>`
 	),

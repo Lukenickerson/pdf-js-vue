@@ -23,6 +23,7 @@ export default {
 			scale: this.initialScale || 1.2,
 			pdf: null,
 			pageVms: [],
+			errorMessage: null,
 		};
 	},
 	mounted() {
@@ -32,15 +33,22 @@ export default {
 	},
 	methods: {
 		async loadPdf(docUrl) {
+			this.errorMessage = null;
 			this.loading = true;
 			// Enable a wait if you want to see the loading indicator
 			// const wait = () => (new Promise((resolve) => window.setTimeout(resolve, 6000)));
 			// await wait();
-			const loadingTask = this.pdfJsLib.getDocument(docUrl);
-			const pdf = await loadingTask.promise;
-			// We don't want Vue to turn this into a Proxy object or it will break some PDF.js
-			// functionality, so we need to freeze it.
-			this.pdf = Object.freeze(pdf);
+			try {
+				const loadingTask = this.pdfJsLib.getDocument(docUrl);
+				const pdf = await loadingTask.promise;
+				// We don't want Vue to turn this into a Proxy object or it will break some PDF.js
+				// functionality, so we need to freeze it.
+				this.pdf = Object.freeze(pdf);
+			} catch (err) {
+				console.error(err);
+				this.errorMessage = String(err);
+				this.pdf = null;
+			}
 			// Once we have the pdf object, we'll know the page count
 			this.loading = false;
 			return;
@@ -67,6 +75,7 @@ export default {
 	template: (
 		`<div class="pjv-page-viewer" :class="pageViewerStateClass">
 			<div>
+				<div class="pjv-error" v-if="errorMessage">Error: {{errorMessage}}</div>
 				<ol class="pjv-page-list">
 					<li class="pjv-page-item" v-for="n in pageCount">
 						<pjv-page-component
