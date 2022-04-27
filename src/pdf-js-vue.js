@@ -11,7 +11,6 @@ function makeOverlayViewerProps(options = {}) {
 	optionsParams.forEach((key) => {
 		if (options[key]) overlayViewerProps[key] = options[key];
 	});
-	console.log(overlayViewerProps)
 	return overlayViewerProps;
 }
 
@@ -30,6 +29,7 @@ function addViewerApp(options = {}) {
 	const { vue, mountId, addMountElement } = options;
 	if (!vue) throw new Error('vue is required');
 	if (!mountId) throw new Error('mountId is required');
+	const overlayViewerProps = makeOverlayViewerProps(options);
 	const appOptions = {
 		components: {
 			'pdf-overlay-viewer-component': pdfOverlayViewerComponent,
@@ -38,9 +38,7 @@ function addViewerApp(options = {}) {
 			`<pdf-overlay-viewer-component v-bind="overlayViewerProps"></pdf-overlay-viewer-component>`
 		),
 		data() {
-			return {
-				overlayViewerProps: makeOverlayViewerProps(options),
-			};
+			return { overlayViewerProps };
 		}
 	};
 	const app = vue.createApp(appOptions);
