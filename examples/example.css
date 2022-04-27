@@ -27,6 +27,7 @@ body {
 	color: white;
 	padding: 1em;
 	font-size: 80%;
+	overflow: auto;
 }
 .code-block code {
 	white-space: pre;

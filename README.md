@@ -52,4 +52,12 @@ You'll need npm and git installed.
 ## Room for Improvement
 
 * Sadly Mozilla's PDF.js does not (as of 2022 April) support ESM Modular builds, nor does it seem to be on the horizon. So we are relying on another repo for this: https://github.com/bundled-es-modules/pdfjs-dist. This repo is not updated as frequently as Mozilla's repo, and is stuck several minor versions behind. It would be good to either make the bundled-es-modules repo so it can be easily updated ([see Issue](https://github.com/bundled-es-modules/pdfjs-dist/issues/24)), or make the PDF.js repo so it can be built with ESM ([something that is not a priority](https://github.com/mozilla/pdf.js/issues/10317)).
-* There are several "TODO"s in the code.
+* Zooming:
+	- Fix zooming so that it's the same increments despite `initialScale`
+	- Allow zooming based on a drop-down.
+	- Disable zooming buttons when reaching the min/max levels
+* Other navbar tools:
+	- Hand (movement)
+	- Previous/Next Page buttons
+	- First/Last Page buttons
+	- Download

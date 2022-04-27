@@ -15639,61 +15639,71 @@ var pjvPageComponent = {
 		pageNumber: Number,
 		scale: Number,
 		pdf: Object, // Frozen object of type PDFDocumentProxy, from PDF.js
+		delay: {
+			type: Number,
+			default: 0,
+		},
 	},
 	data() {
 		return {
 			loading: true,
-			// page: null, // Needs to be of type PDFPageProxy, from PDF.js
-			canvas: null,
-			canvasContext: null,
+			pdfValues: { // Store PDF.js objects in this object to preserve their class types
+				page: null, // Needs to be of type PDFPageProxy, from PDF.js
+			},
+			viewport: null, // type PageViewport from PDF.js - OK if this becomes a Proxy?
 			outputScale: window.devicePixelRatio || 1,
 			errorMessage: null,
+			errorCount: 0,
 		};
 	},
+	watch: {
+		scale() {
+			// this.setViewport();
+			this.renderPage();
+		},
+	},
 	methods: {
+		wait(ms) {
+			return new Promise((resolve) => window.setTimeout(resolve, ms));
+		},
 		getPageId(n) {
 			return [CANVAS_ID, n].join('_');
 		},
+		setPage(page) {
+			this.pdfValues.page = page;
+			this.setViewport();
+		},
+		setViewport() {
+			const { scale, pdfValues } = this;
+			const viewport = pdfValues.page.getViewport({ scale });
+			this.viewport = viewport;
+		},
 		async loadPage() {
+			if (this.errorCount > 10) return; // Safety measure
 			this.errorMessage = null;
 			this.loading = true;
 			try {
-				// const loadingTask = pdfJsLib.getDocument('mozilla_pdf.js_github_2022-04-19.pdf');
-				// const pdf = await loadingTask.promise;
 				const page = await this.pdf.getPage(this.pageNumber);
-				// Freeze the page to avoid Vue making this a Proxy object (PDF.js doesn't like that)
-				// this.page = Object.freeze(page);
-				await this.renderPage(page);
+				this.setPage(page);
+				if (this.delay) await this.wait(this.delay);
+				await this.renderPage();
 			} catch (err) {
 				console.error(err);
+				this.errorCount += 1;
 				this.errorMessage = String(err);
 			}
 			this.loading = false;
 		},
-		setupCanvas() {
-			this.canvas = window.document.getElementById(this.id);
-			this.canvasContext = this.canvas.getContext('2d');
-		},
-		adjustCanvas(viewport) {
-			const { canvas, outputScale } = this;
-			canvas.width = Math.floor(viewport.width * outputScale);
-			canvas.height = Math.floor(viewport.height * outputScale);
-			canvas.style.width = Math.floor(viewport.width) + 'px';
-			canvas.style.height = Math.floor(viewport.height) + 'px';
-		},
-		makeRenderContext(page) {
-			const { canvasContext, scale, outputScale } = this;
-			const viewport = page.getViewport({ scale });
-			this.adjustCanvas(viewport);
-			const transform = (outputScale !== 1) ? [outputScale, 0, 0, outputScale, 0, 0] : null;
-			const renderContext = { canvasContext, transform, viewport };
-			return renderContext;
-		},
-		async renderPage(page) {
-			this.setupCanvas();
-			const renderContext = this.makeRenderContext(page);
-			const renderTask = page.render(renderContext);
-			await renderTask.promise;
+		async renderPage() {
+			if (this.errorCount > 10) return; // Safety measure
+			try {
+				const page = this.pdfValues.page;
+				const renderTask = page.render(this.renderContext);
+				await renderTask.promise;
+			} catch (err) {
+				this.errorCount += 1;
+				console.error('PDF page render failed', err);
+			}
 		},
 	},
 	mounted() {
@@ -15706,18 +15716,53 @@ var pjvPageComponent = {
 		pageClass() {
 			return {
 				'pjv-page--loading': this.loading,
-			}
+			};
+		},
+		renderContext() {
+			const canvas = window.document.getElementById(this.id);
+			const canvasContext = canvas.getContext('2d');
+			this.setViewport(this.scale);
+			const { outputScale, viewport } = this;
+			const transform = (outputScale !== 1) ? [outputScale, 0, 0, outputScale, 0, 0] : null;
+			const renderContext = { canvasContext, transform, viewport };
+			return renderContext;
+		},
+		canvasStyle() {
+			const getViewportStyleValue = (key) => {
+				const n = (this.viewport) ? this.viewport[key] : 0;
+				return `${n}px`;
+			};
+			return {
+				width: getViewportStyleValue('width'),
+				height: getViewportStyleValue('height'),
+			};
+		},
+		canvasWidth() {
+			if (!this.viewport) return 0;
+			return Math.floor(this.viewport.width * this.outputScale);
+		},
+		canvasHeight() {
+			if (!this.viewport) return 0;
+			return Math.floor(this.viewport.height * this.outputScale);
 		},
 	},
 	template: (
 		`<div class="pjv-page" :class="pageClass">
 			<div class="pjv-error" v-if="errorMessage">Error: {{errorMessage}}</div>
-			<canvas :id="id" class="pjv-page-canvas"></canvas>
+			<canvas
+				:id="id"
+				class="pjv-page-canvas"
+				:style="canvasStyle"
+				:width="canvasWidth"
+				:height="canvasHeight"
+			></canvas>
 		</div>`
 	),
 };
 
-var pdfPageViewerComponent = {
+const DELAY_MULTIPLIER = 50;
+
+var docViewerComponent = {
 	props: {
 		pdfJsWorkerSrc: String,
 		pdfDocumentUrl: String,
@@ -15736,7 +15781,6 @@ var pdfPageViewerComponent = {
 			loading: true,
 			canvasContext: null,
 			renderContext: null,
-			scale: this.initialScale || 1.2,
 			pdf: null,
 			pageVms: [],
 			errorMessage: null,
@@ -15746,9 +15790,21 @@ var pdfPageViewerComponent = {
 		// Need to configure the PDF.js library with the worker js path
 		this.pdfJsLib.GlobalWorkerOptions.workerSrc = this.pdfJsWorkerSrc;
 		this.loadPdf(this.pdfDocumentUrl); // async
+		this.emitFilename();
 	},
 	methods: {
-		async loadPdf(docUrl) {
+		async emitFilename() {
+			await this.$nextTick();
+			this.$emit('calculatedFilename', this.filename);
+		},
+		setPdf(pdf) {
+			// We don't want Vue to turn this into a Proxy object or it will break some PDF.js
+			// functionality, so we need to freeze it.
+			this.pdf = Object.freeze(pdf);
+		},
+		async loadPdf(docUrlParam) {
+			const hasUrlParam = Boolean(docUrlParam && typeof docUrlParam === 'string');
+			const docUrl = (hasUrlParam) ? docUrlParam : this.pdfDocumentUrl;
 			this.errorMessage = null;
 			this.loading = true;
 			// Enable a wait if you want to see the loading indicator
@@ -15757,9 +15813,7 @@ var pdfPageViewerComponent = {
 			try {
 				const loadingTask = this.pdfJsLib.getDocument(docUrl);
 				const pdf = await loadingTask.promise;
-				// We don't want Vue to turn this into a Proxy object or it will break some PDF.js
-				// functionality, so we need to freeze it.
-				this.pdf = Object.freeze(pdf);
+				this.setPdf(pdf);
 			} catch (err) {
 				console.error(err);
 				this.errorMessage = String(err);
@@ -15771,17 +15825,21 @@ var pdfPageViewerComponent = {
 		},
 	},
 	computed: {
-		// TODO: Pass filename back to the overlayviewer for display in the navbar
-		// filename() {
-		// 	if (!this.pdfJsLib || !this.pdfDocumentUrl) return 'Unknown';
-		// 	return this.pdfJsLib.getFilenameFromUrl(this.pdfDocumentUrl);
-		// },
+		filename() {
+			if (!this.pdfJsLib || !this.pdfDocumentUrl) return null;
+			return this.pdfJsLib.getFilenameFromUrl(this.pdfDocumentUrl);
+		},
+		scale() {
+			// We're computing this in case we want to allow this scale to be overridden
+			// within this component
+			return this.initialScale || 1;
+		},
 		pageCount() {
 			return (this.pdf && this.pdf.numPages) ? this.pdf.numPages : 0;
 		},
-		pageViewerStateClass() {
+		docViewerStateClass() {
 			return {
-				'pjv-page-viewer--loading': this.loading,
+				'pjv-doc-viewer--loading': this.loading,
 			}
 		},
 	},
@@ -15789,22 +15847,69 @@ var pdfPageViewerComponent = {
 		'pjv-page-component': pjvPageComponent,
 	},
 	template: (
-		`<div class="pjv-page-viewer" :class="pageViewerStateClass">
-			<div>
-				<div class="pjv-error" v-if="errorMessage">Error: {{errorMessage}}</div>
-				<ol class="pjv-page-list">
-					<li class="pjv-page-item" v-for="n in pageCount">
-						<pjv-page-component
-							:pageNumber="n"
-							:scale="scale"
-							:pdf="pdf"
-						></pjv-page-component>
-					</li>
-				</ol>
-				<div class="pjv-page-loading-spinner" v-if="loading">{{loadingText}}</div>
+		`<div class="pjv-doc-viewer" :class="docViewerStateClass">
+			<div class="pjv-error" v-if="errorMessage">
+				Error: {{errorMessage}}
+				<br />
+				<button type="button" @click="loadPdf">Retry</button>
 			</div>
+			<ol class="pjv-page-list">
+				<li class="pjv-page-item" v-for="n in pageCount">
+					<pjv-page-component
+						:pageNumber="n"
+						:scale="scale"
+						:pdf="pdf"
+						:delay="n * ${DELAY_MULTIPLIER}"
+					></pjv-page-component>
+				</li>
+			</ol>
+			<div class="pjv-doc-loading-spinner" v-if="loading">{{loadingText}}</div>
 		</div>`
 	),
+};
+
+const ZOOM_100 = 1.2; // Scale for "100%"
+const MIN_ZOOM_LEVEL = -5;
+const MAX_ZOOM_LEVEL = 10;
+const MAX_SCALE = 0.01;
+/*
+TODO: Allow zoom by drop-down? Like https://mozilla.github.io/pdf.js/web/viewer.html
+const ZOOM_SCALES = [
+	.1,
+	// Scale by 0.17
+	.17,
+	.33,
+	.5,
+	.67,
+	.83,
+	1,
+	1.17,
+	1.33,
+	1.5,
+	// Different scales
+	1.75,
+	2,
+	2.5,
+	3,
+	4,
+	5,
+];
+*/
+const DEFAULT_NAV_CONFIG = {
+	back: {
+		show: true,
+		text: '🡠',
+	},
+	zoom: {
+		show: true,
+	},
+	title: {
+		show: true,
+	},
+	close: {
+		show: true,
+		text: '✕',
+	},
 };
 
 var pdfOverlayViewerComponent = {
@@ -15815,32 +15920,66 @@ var pdfOverlayViewerComponent = {
 			type: Boolean,
 			default: true,
 		},
-		initialBackButtonText: String,
-		initialCloseButtonText: String,
+		navConfig: {
+			type: Object,
+			default: DEFAULT_NAV_CONFIG,
+		},
 		overlayClickClose: {
 			type: Boolean,
 			default: true,
 		},
+		initialScale: {
+			type: Number,
+			default: ZOOM_100,
+		},
+		zoomIncrement: {
+			type: Number,
+			default: 0.2,
+		},
 	},
 	data() {
+		const navConfig = this.getNavConfigWithDefaults();
 		return {
-			pageViewerProps: {
-				pdfJsWorkerSrc: this.pdfJsWorkerSrc,
-				pdfDocumentUrl: this.pdfDocumentUrl,
-			},
 			open: this.initialOpen,
 			loading: true,
-			backButtonText: this.initialBackButtonText || '🡠',
-			closeButtonText: this.initialCloseButtonText || '✕',
+			title: null,
+			backButtonText: navConfig.back.text,
+			showBackButton: navConfig.back.show,
+			closeButtonText: navConfig.close.text,
+			showCloseButton: navConfig.close.show,
+			showZoom: navConfig.zoom.show,
+			showTitle: navConfig.title.show,
+			zoomLevel: 0,
 		};
 	},
 	methods: {
+		getNavConfigWithDefaults() {
+			const navConfig = {};
+			Object.keys(DEFAULT_NAV_CONFIG).forEach((key) => {
+				const options = this.navConfig[key] || {};
+				navConfig[key] = {
+					...DEFAULT_NAV_CONFIG[key],
+					...options,
+				};
+			});
+			return navConfig;
+		},
 		toggleOpen() {
 			this.open = !this.open;
 		},
 		overlayClick() {
 			if (this.overlayClickClose) this.toggleOpen();
-		}
+		},
+		zoomIn() {
+			this.zoomLevel = Math.min(this.zoomLevel + 1, MAX_ZOOM_LEVEL);
+		},
+		zoomOut() {
+			this.zoomLevel = Math.max(this.zoomLevel - 1, MIN_ZOOM_LEVEL);
+		},
+		displayTitle(title) {
+			if (!this.showTitle) return;
+			this.title = title;
+		},
 	},
 	computed: {
 		overlayViewerClass() {
@@ -15849,56 +15988,92 @@ var pdfOverlayViewerComponent = {
 				'pjv-overlay-viewer-container--loading': this.loading,
 			};
 		},
+		scale() {
+			return Math.max(
+				MAX_SCALE,
+				this.initialScale + (this.zoomIncrement * this.zoomLevel)
+			);
+		},
+		zoomPercent() {
+			return Math.round(100 * (this.scale / this.initialScale));
+		},
+		docViewerProps() {
+			return {
+				pdfJsWorkerSrc: this.pdfJsWorkerSrc,
+				pdfDocumentUrl: this.pdfDocumentUrl,
+				initialScale: this.scale,
+			};
+		},
 	},
 	mounted() {
 		window.setTimeout(() => this.loading = false, 1);
 	},
 	components: {
-		'pdf-page-viewer-component': pdfPageViewerComponent,
+		'pjv-doc-viewer-component': docViewerComponent,
 	},
 	template: (
-		`<div class="pjv-overlay-viewer-container" :class="overlayViewerClass">
+		`<article class="pjv-overlay-viewer-container" :class="overlayViewerClass">
 			<div class="pjv-overlay" @click="overlayClick"></div>
 			<div class="pjv-viewer-container">
-				<div class="pjv-navbar">
-					<button type="button" class="pjv-navbar-button"
-						@click="toggleOpen">
-						{{backButtonText}}
-					</button>
-					<button type="button" class="pjv-navbar-button"
-						@click="toggleOpen">
-						{{closeButtonText}}
-					</button>
-				</div>
-				<pdf-page-viewer-component v-bind="pageViewerProps"></pdf-page-viewer-component>
+				<nav class="pjv-navbar">
+					<div class="pjv-navbar-button-group">
+						<button type="button" class="pjv-navbar-button"
+							v-if="showBackButton"
+							@click="toggleOpen">
+							{{backButtonText}}
+						</button>
+					</div>
+					<div class="pjv-navbar-button-group pjv-navbar-title"
+						v-if="showTitle && title">
+						{{title}}
+					</div>
+					<div class="pjv-navbar-button-group pjv-navbar-zoom-group"
+						v-if="showZoom">
+						<button type="button" class="pjv-navbar-button"
+							@click="zoomOut">
+							-
+						</button>
+						<button type="button" class="pjv-navbar-button"
+							@click="zoomIn">
+							+
+						</button>
+						<div>
+							{{zoomPercent}}%
+						</div>
+					</div>
+					<div class="pjv-navbar-button-group">
+						<button type="button" class="pjv-navbar-button"
+							v-if="showCloseButton"
+							@click="toggleOpen">
+							{{closeButtonText}}
+						</button>
+					</div>
+				</nav>
+				<pjv-doc-viewer-component
+					v-bind="docViewerProps"
+					@calculated-filename="displayTitle"
+				></pjv-doc-viewer-component>
 			</div>
-		</div>`
+		</article>`
 	),
 };
 
-function addViewerApp(options = {}) {
-	const { vue, mountId, pdfJsWorkerSrc, pdfDocumentUrl, addMountElement } = options;
-	if (!vue) throw new Error('vue is required');
-	if (!mountId) throw new Error('mountId is required');
+function makeOverlayViewerProps(options = {}) {
+	const { pdfJsWorkerSrc, pdfDocumentUrl } = options;
 	if (!pdfJsWorkerSrc) console.warn('No pdfJsWorkerSrc param was provided. This will likely cause an error when opening PDFs.');
 	if (!pdfDocumentUrl) console.warn('No pdfDocumentUrl param was provided.');
-	const appOptions = {
-		components: {
-			'pdf-overlay-viewer-component': pdfOverlayViewerComponent,
-		},
-		template: (
-			`<pdf-overlay-viewer-component v-bind="viewerProps"></pdf-overlay-viewer-component>`
-		),
-		data() {
-			return {
-				viewerProps: {
-					pdfJsWorkerSrc,
-					pdfDocumentUrl,
-				},
-			};
-		}
-	};
-	const app = vue.createApp(appOptions);
+	const overlayViewerProps = { pdfJsWorkerSrc, pdfDocumentUrl };
+	const optionsParams = [
+		'navConfig', 'overlayClickClose', 'initialOpen', 'initialScale', 'zoomIncrement',
+	];
+	optionsParams.forEach((key) => {
+		if (options[key]) overlayViewerProps[key] = options[key];
+	});
+	console.log(overlayViewerProps);
+	return overlayViewerProps;
+}
+
+function mountApp(app, mountId, addMountElement) {
 	// If the mount/container element doesn't exist, let's create it at the end of the body
 	if (addMountElement && window && window.document && !window.document.getElementById(mountId)) {
 		const mountElt = window.document.createElement('div');
@@ -15907,6 +16082,27 @@ function addViewerApp(options = {}) {
 		body.appendChild(mountElt);
 	}
 	app.mount(`#${mountId}`);
+}
+
+function addViewerApp(options = {}) {
+	const { vue, mountId, addMountElement } = options;
+	if (!vue) throw new Error('vue is required');
+	if (!mountId) throw new Error('mountId is required');
+	const appOptions = {
+		components: {
+			'pdf-overlay-viewer-component': pdfOverlayViewerComponent,
+		},
+		template: (
+			`<pdf-overlay-viewer-component v-bind="overlayViewerProps"></pdf-overlay-viewer-component>`
+		),
+		data() {
+			return {
+				overlayViewerProps: makeOverlayViewerProps(options),
+			};
+		}
+	};
+	const app = vue.createApp(appOptions);
+	mountApp(app, mountId, addMountElement);
 }
 
 const pdfJsVue = { addViewerApp };

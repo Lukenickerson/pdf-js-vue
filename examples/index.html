@@ -4,7 +4,7 @@
 	<meta charset="UTF-8" />
 	<link rel="icon" type="image/svg+xml" href="favicon.svg" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>PDF-JS-VUE</title>
+	<title>PDF-JS-VUE Example</title>
 	<link rel="stylesheet" href="../styles/pdf-js-vue-viewer.css" />
 	<link rel="stylesheet" href="./example.css" />
 	<!-- <script type="module" src="example.mjs" id="example-script"></script> -->
@@ -26,7 +26,8 @@ const pdfJsWorkerSrc = '../build/pdf.worker.js';
 
 // Open a PDF by adding the "Viewer" vue app with addViewerApp
 function openPdf(pdfDocumentUrl) {
-	pdfJsVue.addViewerApp({ vue, mountId, pdfJsWorkerSrc, pdfDocumentUrl });
+	pdfJsVue.addViewerApp({ vue, mountId, pdfJsWorkerSrc, pdfDocumentUrl,
+		initialScale: 1 });
 }
 // Allow opening of PDFs by clicking any element with a data-pdfsrc value
 window.document.addEventListener('click', (e) => {
