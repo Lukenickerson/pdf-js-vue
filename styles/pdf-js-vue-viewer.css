@@ -53,16 +53,16 @@
 	transform: translateY(-100%) rotate3d(1, 0, 0, 90deg);
 }
 
-.pjv-navbar-button-group {
+.pjv-navbar-group {
 	display: flex;
 	flex-direction: row;
 	justify-content: space-evenly;
 	flex-grow: 1;
 }
-.pjv-navbar-button-group:first-child {
+.pjv-navbar-group:first-child {
 	justify-content: flex-start;
 }
-.pjv-navbar-button-group:last-child {
+.pjv-navbar-group:last-child {
 	justify-content: flex-end;
 }
 

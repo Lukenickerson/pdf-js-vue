@@ -16012,24 +16012,27 @@ var pdfOverlayViewerComponent = {
 			<div class="pjv-overlay" @click="overlayClick"></div>
 			<div class="pjv-viewer-container">
 				<nav class="pjv-navbar">
-					<div class="pjv-navbar-button-group">
-						<button type="button" class="pjv-navbar-button"
+					<div class="pjv-navbar-group">
+						<button type="button"
+							class="pjv-navbar-button pjv-navbar-back-button"
 							v-if="showBackButton"
 							@click="toggleOpen">
 							{{backButtonText}}
 						</button>
 					</div>
-					<div class="pjv-navbar-button-group pjv-navbar-title"
+					<div class="pjv-navbar-group pjv-navbar-title"
 						v-if="showTitle && title">
 						{{title}}
 					</div>
-					<div class="pjv-navbar-button-group pjv-navbar-zoom-group"
+					<div class="pjv-navbar-group pjv-navbar-zoom-group"
 						v-if="showZoom">
-						<button type="button" class="pjv-navbar-button"
+						<button type="button"
+							class="pjv-navbar-button pjv-navbar-zoom-out-button"
 							@click="zoomOut">
 							-
 						</button>
-						<button type="button" class="pjv-navbar-button"
+						<button type="button"
+							class="pjv-navbar-button pjv-navbar-zoom-in-button"
 							@click="zoomIn">
 							+
 						</button>
@@ -16037,8 +16040,9 @@ var pdfOverlayViewerComponent = {
 							{{zoomPercent}}%
 						</div>
 					</div>
-					<div class="pjv-navbar-button-group">
-						<button type="button" class="pjv-navbar-button"
+					<div class="pjv-navbar-group">
+						<button type="button"
+							class="pjv-navbar-button pjv-navbar-close-button"
 							v-if="showCloseButton"
 							@click="toggleOpen">
 							{{closeButtonText}}

@@ -26,8 +26,7 @@ const pdfJsWorkerSrc = '../build/pdf.worker.js';
 
 // Open a PDF by adding the "Viewer" vue app with addViewerApp
 function openPdf(pdfDocumentUrl) {
-	pdfJsVue.addViewerApp({ vue, mountId, pdfJsWorkerSrc, pdfDocumentUrl,
-		initialScale: 1 });
+	pdfJsVue.addViewerApp({ vue, mountId, pdfJsWorkerSrc, pdfDocumentUrl });
 }
 // Allow opening of PDFs by clicking any element with a data-pdfsrc value
 window.document.addEventListener('click', (e) => {
