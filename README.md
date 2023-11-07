@@ -55,8 +55,8 @@ These instructions will vary based on whether you're building/bundling your app 
 
 ## Room for Improvement
 
-* Because the viewer is a vue component, it can be added to an existing Vue app (rather than making a new app with `createApp`). It would be good to provide an example of this.
-* Sadly Mozilla's PDF.js does not (as of 2022 April) support ESM Modular builds, nor does it seem to be on the horizon. So we are relying on another repo for this: https://github.com/bundled-es-modules/pdfjs-dist. This repo is not updated as frequently as Mozilla's repo, and is stuck several minor versions behind. It would be good to either make the bundled-es-modules repo so it can be easily updated ([see Issue](https://github.com/bundled-es-modules/pdfjs-dist/issues/24)), or make the PDF.js repo so it can be built with ESM ([something that is not a priority](https://github.com/mozilla/pdf.js/issues/10317)).
+* Sadly Mozilla's PDF.js does not (as of 2023 November) support ESM Modular builds, nor does it seem to be on the horizon. So we are relying on another repo for this: https://github.com/bundled-es-modules/pdfjs-dist. This repo is not updated as frequently as Mozilla's repo, does not make official releases, and can be stuck several versions behind. It would be good to either make the bundled-es-modules repo so it can be easily updated ([see Issue](https://github.com/bundled-es-modules/pdfjs-dist/issues/24)), or make the PDF.js repo so it can be built with ESM ([something that is not a priority](https://github.com/mozilla/pdf.js/issues/10317)).
+	- Sadly updating to the latest [ESM pdfjs-dist v3.6.172-alpha.1](https://github.com/bundled-es-modules/pdfjs-dist/releases/tag/v3.6.172-alpha.1) throws a number of errors.
 * Zooming:
 	- Fix zooming so that it's the same increments despite `initialScale`
 	- Allow zooming based on a drop-down.
@@ -68,3 +68,4 @@ These instructions will vary based on whether you're building/bundling your app 
 	- Download
 	- Other functionality that is on the [Mozilla viewer](https://mozilla.github.io/pdf.js/web/viewer.html)
 * Keep this up-to-date with the latest Vue version
+* Because the viewer is a vue component, it can be added to an existing Vue app (rather than making a new app with `createApp`). It would be good to provide an example of this.
