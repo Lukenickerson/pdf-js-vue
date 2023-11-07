@@ -1,6 +1,6 @@
 {
   "name": "pdf-js-vue",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "PDF viewer for the web, utilizing Vue.js and Mozilla's PDF.js",
   "main": "src/pdf-js-vue.js",
   "type": "module",
@@ -19,12 +19,12 @@
   "author": "Luke Nickerson",
   "license": "MIT",
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^13.2.1",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
     "http-server": "^14.1.0",
-    "rollup": "^2.70.2",
-    "rollup-plugin-commonjs": "^9.0.0",
-    "rollup-plugin-copy": "^3.0.0",
-    "vue": "^3.2.33"
+    "rollup": "^4.3.0",
+    "rollup-plugin-copy": "^3.5.0",
+    "vue": "^3.3.8"
   },
   "dependencies": {
     "@bundled-es-modules/pdfjs-dist": "2.5.207-rc1"
