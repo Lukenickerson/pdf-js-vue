@@ -1,6 +1,6 @@
 {
   "name": "pdf-js-vue",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "PDF viewer for the web, utilizing Vue.js and Mozilla's PDF.js",
   "main": "src/pdf-js-vue.js",
   "type": "module",
@@ -27,6 +27,6 @@
     "vue": "^3.2.33"
   },
   "dependencies": {
-    "@bundled-es-modules/pdfjs-dist": "^2.5.207-rc1"
+    "@bundled-es-modules/pdfjs-dist": "2.5.207-rc1"
   }
 }
